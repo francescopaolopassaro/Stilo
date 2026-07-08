@@ -1,0 +1,21 @@
+@inherits LayoutComponentBase
+
+<div class="se-demo-layout">
+    <nav class="se-demo-navbar">
+        <img class="se-demo-logo" src="_content/Stilo.Editor/StiloLogo.png" alt="Stilo" />
+        <span class="se-demo-brand">Stilo <span>Editor</span></span>
+        <span class="se-demo-nav-spacer"></span>
+        <a href="/" style="margin-right:14px;color:inherit;text-decoration:none">Editor</a>
+        <a href="/report-designer" style="margin-right:14px;color:inherit;text-decoration:none">Report Designer</a>
+        <a href="/report-viewer" style="margin-right:14px;color:inherit;text-decoration:none">Report Viewer</a>
+        <span class="se-demo-badge">Interactive Server</span>
+    </nav>
+    <main class="se-demo-main">
+        <div class="se-demo-container">
+            @Body
+        </div>
+    </main>
+    <footer class="se-demo-footer">
+        Stilo Editor &copy; 2026 Francesco Paolo Passaro
+    </footer>
+</div>

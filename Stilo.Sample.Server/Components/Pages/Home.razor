@@ -1,0 +1,136 @@
+@page "/"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+<PageTitle>Stilo Editor — Demo Server</PageTitle>
+
+<div class="se-demo-hero">
+    <h1>✏ Editor WYSIWYG</h1>
+    <p>Editor visuale professionale con ribbon toolbar, correttore ortografico, esportazione DOCX/PDF e molto altro.</p>
+</div>
+
+<div class="se-demo-grid">
+    <div class="se-demo-col-main">
+        <div class="se-demo-editor-wrap">
+            <StiloEditor @ref="_editor"
+                         @bind-Value="_htmlContent"
+                         Options="_options"
+                         PreferredSaveFormat="SaveFormat.Html"
+                         OnSave="HandleSave"
+                         DocxConverter="_docxConverter"
+                         PdfConverter="_pdfConverter"
+                         HtmlToDocxConverter="_htmlToDocxConverter"
+                         HtmlToPdfConverter="_htmlToPdfConverter" />
+        </div>
+    </div>
+
+    <div class="se-demo-col-side">
+        <div class="se-demo-stack">
+
+            <div class="se-demo-card">
+                <div class="se-demo-card-header">
+                    <h6>⚙ Opzioni Editor</h6>
+                </div>
+                <div class="se-demo-card-body">
+                    <div class="se-demo-form">
+                        <label class="se-demo-field">
+                            Altezza minima (px)
+                            <input type="number" @bind="_minHeight" min="100" max="2000" step="50" />
+                        </label>
+                        <label class="se-demo-field">
+                            Altezza massima (px)
+                            <input type="number" @bind="_maxHeight" min="200" max="2000" step="50" />
+                        </label>
+                        <label class="se-demo-switch">
+                            <input type="checkbox" @bind="_showStatusBar" />
+                            Barra di stato
+                        </label>
+                        <label class="se-demo-switch">
+                            <input type="checkbox" @bind="_showSourceMode" />
+                            Modalità sorgente HTML
+                        </label>
+                        <label class="se-demo-switch">
+                            <input type="checkbox" @bind="_readOnly" />
+                            Sola lettura
+                        </label>
+                        <button class="se-demo-btn" @onclick="ApplyOptions">🔄 Aggiorna opzioni</button>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_saveStatus))
+            {
+                <div class="se-demo-alert">@_saveStatus</div>
+            }
+
+            <div class="se-demo-card">
+                <div class="se-demo-card-header">
+                    <h6>📄 Contenuto HTML</h6>
+                </div>
+                <div class="se-demo-card-body" style="padding:0;">
+                    <textarea class="se-demo-textarea" readonly>@_htmlContent</textarea>
+                </div>
+            </div>
+
+            <div class="se-demo-card">
+                <div class="se-demo-card-header">
+                    <h6>👁 Anteprima renderizzata</h6>
+                </div>
+                <div class="se-demo-card-body">
+                    <div class="se-demo-preview">
+                        @((MarkupString)_htmlContent)
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private StiloEditor _editor = null!;
+    private string _htmlContent = "<p>Benvenuto in <strong>Stilo Editor</strong> — il tuo editor WYSIWYG in Blazor!</p><p>Prova le funzionalità della barra degli strumenti per formattare il testo.</p>";
+    private string _saveStatus = "";
+    private int _minHeight = 400;
+    private int _maxHeight = 700;
+    private bool _showStatusBar = true;
+    private bool _showSourceMode = true;
+    private bool _readOnly = false;
+
+    private readonly IDocxToHtmlConverter _docxConverter = new DocxToHtmlConverter();
+    private readonly IPdfToHtmlConverter _pdfConverter = new PdfToHtmlConverter();
+    private readonly IHtmlToDocxConverter _htmlToDocxConverter = new HtmlToDocxConverter();
+    private readonly IHtmlToPdfConverter _htmlToPdfConverter = new HtmlToPdfConverter();
+
+    private EditorOptions _options = new()
+    {
+        MinHeight = 400,
+        MaxHeight = 700,
+        ShowStatusBar = true,
+        ShowSourceMode = true,
+        ReadOnly = false
+    };
+
+    private void ApplyOptions()
+    {
+        _options = new EditorOptions
+        {
+            MinHeight = _minHeight,
+            MaxHeight = _maxHeight,
+            ShowStatusBar = _showStatusBar,
+            ShowSourceMode = _showSourceMode,
+            ReadOnly = _readOnly
+        };
+    }
+
+    private async Task HandleSave(StiloSaveArgs args)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(args.HtmlContent);
+        var b64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval",
+            $"var a=document.createElement('a');a.href='data:text/html;base64,{b64}';" +
+            $"a.download='documento.html';a.click();");
+        _saveStatus = $"Salvato ({args.Format}) — {DateTime.Now:HH:mm:ss}";
+    }
+
+}

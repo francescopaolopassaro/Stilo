@@ -1,0 +1,87 @@
+@page "/"
+
+<PageTitle>Stilo Editor — WASM Demo</PageTitle>
+
+<div class="se-demo-hero">
+    <h1>✏ Editor WYSIWYG — WebAssembly</h1>
+    <p>Editor visuale professionale eseguito interamente nel browser con Blazor WebAssembly.</p>
+</div>
+
+<div class="se-demo-grid">
+    <div class="se-demo-col-main">
+        <div class="se-demo-editor-wrap">
+            <StiloEditor @bind-Value="_htmlContent" Options="_options" />
+        </div>
+    </div>
+
+    <div class="se-demo-col-side">
+        <div class="se-demo-stack">
+
+            <div class="se-demo-card">
+                <div class="se-demo-card-header">
+                    <h6>⚙ Opzioni Editor</h6>
+                </div>
+                <div class="se-demo-card-body">
+                    <div class="se-demo-form">
+                        <label class="se-demo-field">
+                            Altezza minima (px)
+                            <input type="number" @bind="_minHeight" min="100" max="2000" step="50" />
+                        </label>
+                        <label class="se-demo-field">
+                            Altezza massima (px)
+                            <input type="number" @bind="_maxHeight" min="200" max="2000" step="50" />
+                        </label>
+                        <label class="se-demo-switch">
+                            <input type="checkbox" @bind="_showSourceMode" />
+                            Modalità sorgente HTML
+                        </label>
+                        <label class="se-demo-switch">
+                            <input type="checkbox" @bind="_showStatusBar" />
+                            Barra di stato
+                        </label>
+                        <button class="se-demo-btn" @onclick="ApplyOptions">🔄 Aggiorna opzioni</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="se-demo-card">
+                <div class="se-demo-card-header">
+                    <h6>👁 Anteprima</h6>
+                </div>
+                <div class="se-demo-card-body">
+                    <div class="se-demo-preview">
+                        @((MarkupString)_htmlContent)
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _htmlContent = "<p>Benvenuto in <strong>Stilo Editor</strong> su <em>WebAssembly</em>!</p><p>Tutta la logica gira nel browser, senza round-trip al server.</p>";
+    private bool _showSourceMode = true;
+    private bool _showStatusBar = true;
+    private int _minHeight = 400;
+    private int _maxHeight = 700;
+
+    private EditorOptions _options = new()
+    {
+        MinHeight = 400,
+        MaxHeight = 700,
+        ShowStatusBar = true,
+        ShowSourceMode = true
+    };
+
+    private void ApplyOptions()
+    {
+        _options = new EditorOptions
+        {
+            MinHeight = _minHeight,
+            MaxHeight = _maxHeight,
+            ShowStatusBar = _showStatusBar,
+            ShowSourceMode = _showSourceMode
+        };
+    }
+}

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Stilo.Sample.Wasm": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:61914;http://localhost:61917"
+    }
+  }
+}

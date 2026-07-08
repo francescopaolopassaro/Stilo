@@ -1,0 +1,215 @@
+@page "/report-viewer"
+@rendermode InteractiveServer
+@using System.Data
+@using Stilo.Documents.Converters
+@using Stilo.Documents.HtmlRenderer.Layout
+@using Stilo.Reports.Components
+@using Stilo.Reports.Data
+@using Stilo.Reports.Models
+@using Stilo.Reports.Rendering
+
+<PageTitle>Stilo Reports — Viewer</PageTitle>
+
+<div style="height:calc(100vh - 160px);min-height:600px">
+    <StiloReportViewer Title="Ordine di vendita" ReportDefinition="_report" DataSources="_dataSources" SubReports="_subReports" HtmlToPdfConverter="_pdfConverter" />
+</div>
+
+@code {
+    private readonly Report _report = BuildDemoReport();
+    private readonly IHtmlToPdfConverter _pdfConverter = new HtmlToPdfConverter(PageLayout.A4Portrait(36));
+    private readonly List<ReportDataSource> _dataSources = new();
+    private readonly Dictionary<string, SubReportResolution> _subReports = new();
+
+    private static TablixCell TextCell(string expr, Style? style = null) => new()
+    {
+        Items = { new Textbox { Style = style ?? new Style(), Paragraphs = { new Paragraph { Runs = { new TextRun { Value = expr } } } } } }
+    };
+
+    protected override void OnInitialized()
+    {
+        var table = new DataTable();
+        table.Columns.Add("Category", typeof(string));
+        table.Columns.Add("Product", typeof(string));
+        table.Columns.Add("Qty", typeof(double));
+        table.Columns.Add("UnitPrice", typeof(double));
+
+        void Add(string cat, string prod, double qty, double price)
+        {
+            var row = table.NewRow();
+            row["Category"] = cat; row["Product"] = prod; row["Qty"] = qty; row["UnitPrice"] = price;
+            table.Rows.Add(row);
+        }
+        Add("Bike", "Road-150", 2, 1200);
+        Add("Bike", "Mountain-100", 3, 950);
+        Add("Bike", "City-50", 1, 450);
+        Add("Accessory", "Helmet", 5, 45);
+        Add("Accessory", "Lock", 4, 25);
+
+        _dataSources.Add(ReportDataSource.FromDataTable("Sales", table));
+
+        // Subreport reale: dimostra la risoluzione per nome + parametro passato dal padre,
+        // verificando end-to-end il collegamento StiloReportViewer -> PageLayoutEngine/HtmlPageRenderer
+        // (il motore da solo, senza questo parametro, non è raggiungibile dai componenti Blazor).
+        var noteReport = new Report { Description = "Nota cliente" };
+        noteReport.Body.Height = RdlSize.FromMm(12);
+        noteReport.Body.Items.Add(new Textbox
+        {
+            Name = "NoteText",
+            Width = RdlSize.FromMm(190),
+            Height = RdlSize.FromMm(10),
+            Style = new Style { FontStyle = "Italic", Color = "#64748b" },
+            Paragraphs = { new Paragraph { Runs = { new TextRun { Value = "=\"Nota: cliente \" & Parameters!ClienteNome.Value & \" - pagamento a 30gg\"" } } } },
+        });
+        _subReports["ClientNote"] = new SubReportResolution { Report = noteReport };
+    }
+
+    private static Report BuildDemoReport()
+    {
+        var report = new Report { Description = "Ordine di vendita demo" };
+        report.Body.Height = RdlSize.FromMm(220);
+
+        report.PageHeader = new PageSection { Height = RdlSize.FromMm(15) };
+        report.PageHeader.Items.Add(new Textbox
+        {
+            Name = "HeaderTitle",
+            Top = RdlSize.FromMm(2),
+            Left = RdlSize.FromMm(10),
+            Width = RdlSize.FromMm(100),
+            Height = RdlSize.FromMm(10),
+            Paragraphs = { new Paragraph { Runs = { new TextRun { Value = "Ordine di vendita #SO-2026-001" } } } },
+        });
+
+        report.PageFooter = new PageSection { Height = RdlSize.FromMm(10) };
+        report.PageFooter.Items.Add(new Textbox
+        {
+            Name = "FooterPage",
+            Top = RdlSize.FromMm(1),
+            Left = RdlSize.FromMm(180),
+            Width = RdlSize.FromMm(20),
+            Height = RdlSize.FromMm(8),
+            Paragraphs = { new Paragraph { Runs = { new TextRun { Value = "=\"Pag. \" & Globals!PageNumber & \" di \" & Globals!TotalPages" } } } },
+        });
+
+        report.Body.Items.Add(new Rectangle
+        {
+            Name = "HeaderBand",
+            Top = RdlSize.FromMm(0),
+            Left = RdlSize.FromMm(10),
+            Width = RdlSize.FromMm(190),
+            Height = RdlSize.FromMm(15),
+            Style = new Style { BackgroundColor = "#555b63" },
+        });
+        report.Body.Items.Add(new Textbox
+        {
+            Name = "ClientLabel",
+            Top = RdlSize.FromMm(4),
+            Left = RdlSize.FromMm(14),
+            Width = RdlSize.FromMm(100),
+            Height = RdlSize.FromMm(8),
+            Style = new Style { Color = "white", FontWeight = "Bold", FontSize = "14pt" },
+            Paragraphs = { new Paragraph { Runs = { new TextRun { Value = "Central Discount Store" } } } },
+        });
+        report.Body.Items.Add(new Line
+        {
+            Name = "Sep1",
+            Top = RdlSize.FromMm(20),
+            Left = RdlSize.FromMm(10),
+            Width = RdlSize.FromMm(190),
+            Height = RdlSize.FromMm(0),
+        });
+
+        // Tablix con gruppo per Category, dettaglio per prodotto, totale per gruppo.
+        var tablix = new Tablix
+        {
+            Name = "SalesTablix",
+            DataSetName = "Sales",
+            Top = RdlSize.FromMm(28),
+            Left = RdlSize.FromMm(10),
+            Width = RdlSize.FromMm(190),
+            Height = RdlSize.FromMm(70),
+        };
+        tablix.Body.ColumnWidths.Add(RdlSize.FromMm(90));
+        tablix.Body.ColumnWidths.Add(RdlSize.FromMm(50));
+        tablix.Body.ColumnWidths.Add(RdlSize.FromMm(50));
+
+        var headerStyle = new Style { Color = "white", FontWeight = "Bold" };
+        headerStyle.Borders["Border"] = new Border { BorderStyle = "Solid", Color = "#333", Width = "0.5pt" };
+        tablix.Body.Rows.Add(new TablixRow
+        {
+            Height = RdlSize.FromMm(7),
+            Cells =
+            {
+                TextCell("Prodotto", headerStyle),
+                TextCell("Quantità", headerStyle),
+                TextCell("Totale (€)", headerStyle),
+            },
+        });
+        tablix.Body.Rows.Add(new TablixRow
+        {
+            Height = RdlSize.FromMm(6),
+            Cells =
+            {
+                TextCell("=Fields!Product.Value"),
+                TextCell("=Fields!Qty.Value"),
+                TextCell("=Format(Fields!Qty.Value * Fields!UnitPrice.Value, \"N2\")"),
+            },
+        });
+        var totalStyle = new Style { FontWeight = "Bold", BackgroundColor = "#f3f4f6" };
+        tablix.Body.Rows.Add(new TablixRow
+        {
+            Height = RdlSize.FromMm(6),
+            Cells =
+            {
+                TextCell("Totale categoria", totalStyle),
+                TextCell("=Sum(Fields!Qty.Value)", totalStyle),
+                TextCell("=Format(Sum(Fields!Qty.Value * Fields!UnitPrice.Value), \"N2\")", totalStyle),
+            },
+        });
+        tablix.RowHierarchy.Members.Add(new TablixMember
+        {
+            Group = new Group { Name = "CategoryGroup", GroupExpressions = { "=Fields!Category.Value" } },
+        });
+        tablix.SortExpressions.Add(new SortExpression { Expression = "=Fields!Category.Value" });
+        report.Body.Items.Add(tablix);
+
+        // Grafico a colonne delle quantità per prodotto.
+        var chart = new Chart
+        {
+            Name = "QtyChart",
+            Top = RdlSize.FromMm(105),
+            Left = RdlSize.FromMm(10),
+            Width = RdlSize.FromMm(190),
+            Height = RdlSize.FromMm(60),
+            Type = ChartType.Column,
+            Title = "Quantità per prodotto",
+            CategoryExpression = "=Fields!Product.Value",
+            DataSetName = "Sales",
+        };
+        chart.Series.Add(new ChartSeries { Name = "Quantità", ValueExpression = "=Fields!Qty.Value" });
+        report.Body.Items.Add(chart);
+
+        report.Body.Items.Add(new Textbox
+        {
+            Name = "Note",
+            Top = RdlSize.FromMm(170),
+            Left = RdlSize.FromMm(10),
+            Width = RdlSize.FromMm(190),
+            Height = RdlSize.FromMm(10),
+            Paragraphs = { new Paragraph { Runs = { new TextRun { Value = "Generato dal motore di rendering di Stilo.Reports (tablix con gruppi + chart)." } } } },
+        });
+
+        var clientNote = new SubReport
+        {
+            Name = "ClientNoteSub",
+            ReportName = "ClientNote",
+            Top = RdlSize.FromMm(182),
+            Left = RdlSize.FromMm(10),
+            Width = RdlSize.FromMm(190),
+            Height = RdlSize.FromMm(12),
+        };
+        clientNote.Parameters.Add(new SubReportParameter { Name = "ClienteNome", ValueExpression = "=\"Central Discount Store\"" });
+        report.Body.Items.Add(clientNote);
+
+        return report;
+    }
+}

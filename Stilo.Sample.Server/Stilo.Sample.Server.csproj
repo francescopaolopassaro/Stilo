@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Authors>Francesco Paolo Passaro</Authors>
+    <Company>DigitalSolutions</Company>
+    <Copyright>Copyright © 2026 Francesco Paolo Passaro. All rights reserved.</Copyright>
+    <PackageProjectUrl>https://www.digitalsolutions.it</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/francescopaolopassaro/Stilo</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Stilo.Editor" Version="1.0.1" />
+    <PackageReference Include="Stilo.Reports" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="*.license" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
