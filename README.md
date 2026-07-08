@@ -1,6 +1,6 @@
 # Stilo Suite
 
-![Stilo Banner](https://raw.githubusercontent.com/francescopaolopassaro/Stilo/assets/StiloNero.png)
+![Stilo Banner](/assets/StiloNero.png)
 
 **Live demo projects for the Stilo suite** — a family of professional, 100% managed-code .NET libraries for Blazor: a WYSIWYG HTML editor, an RDL/RDLC-compatible report designer/viewer, a document conversion engine, and an offline spell checker.
 
