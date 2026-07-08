@@ -394,6 +394,6 @@ Both projects reference the Stilo packages via `PackageReference` (NuGet), resol
 
 For commercial licensing inquiries: **Francesco Paolo Passaro** — [info@digitalsolutions.it](mailto:info@digitalsolutions.it)
 
-Full license terms: see [LICENSE](https://github.com/francescopaolopassaro/Stilo.Sources/blob/main/LICENSE) in the Stilo.Sources repository.
+Full license terms: see [LICENSE](/LICENSE) in the Stilo.Sources repository.
 
 > This repository does **not** include any license file — do not copy a `.license` file from another machine/project; request your own from the link above.
